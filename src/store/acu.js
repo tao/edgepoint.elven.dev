@@ -60,6 +60,11 @@ const mutations = {
       siteId: data.siteId,
     }
 
+  },
+  'DELETE_DUPLICATE_SITE': (state, data) => {
+    let newState = state
+    delete newState.data[data.siteId]
+    return newState
   }
 }
 

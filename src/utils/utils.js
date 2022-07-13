@@ -33,13 +33,35 @@ export function _reduceTableDetails (table) {
 
     row.columns.forEach(el => {
       let tableTitle = table.columns.find(col => el.headerColumnId === col.id).heading.slugify()
-      temp[tableTitle] = el.value
+
+      switch(el.kind) {
+        case 'photo': {
+          if (el.photos) {
+            let response = el.photos.map(photo => photo.description).filter(el => el !== '').filter(el => el !== undefined)
+            response = (response.length === 1) ? response[0] : response.join('; ')
+            temp[tableTitle] = response
+          }
+          break;
+        }
+        default: {
+          temp[tableTitle] = el.value
+          break;
+        }
+      }
     })
 
     response.push(temp)
   })
 
   return response
+}
+
+export function _reduceDropdown (el) {
+  if (el.items && el.items.length > 0 && el.selectedItems.length !== 0) {
+    return el.selectedItems[0].value
+  }
+
+  return undefined
 }
 
 export function _reduceAllDetails (details) {
@@ -72,12 +94,25 @@ export function _reduceAllDetails (details) {
         break;
       }
       case 'yesNoCheckbox': {
-        obj = el.checked
+        obj = el // WARNING: dont change
         break;
       }
       case 'multiLineInput': {
         obj = el.content
         break;
+      }
+      // case 'media': {
+      //   obj = el.description
+      // }
+    }
+
+    // if the key already exists, push the new data
+    let prev = data[el.description.slugify()]
+    if (prev) {
+      if (Array.isArray(obj)) {
+        obj && obj.forEach(item => prev.push(item))
+      } else {
+        obj = prev
       }
     }
 

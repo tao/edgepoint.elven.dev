@@ -1,7 +1,7 @@
 import {
   _reduceSurveyDetails,
   _reduceTableDetails,
-  _reduceAllDetails,
+  _reduceAllDetails, _reduceDropdown,
 } from '../utils/utils'
 
 import {
@@ -19,31 +19,77 @@ const state = () => getDefaultState()
 // getters
 const getters = {
   getSiteDetailsById: (state) => (id) => {
-    return state.data[id];
+    let site = state.data[id];
+
+    // Object.keys(site).forEach(sx => {
+    //   let siteEl = site[sx]
+    //
+    //   if (siteEl.kind === 'yesNoCheckbox') {
+    //     site[sx] = siteEl.checked
+    //   }
+    //
+    // })
+
+    return site
   },
   getSiteDetails: (state) => {
-    return state.data
+    let sites = state.data
+
+    // Object.keys(sites).forEach(siteId => {
+    //
+    //   let site = sites[siteId]
+    //
+    //   Object.keys(site).forEach(sx => {
+    //     let siteEl = site[sx]
+    //
+    //     if (siteEl && siteEl.kind === 'yesNoCheckbox') {
+    //       sites[siteId][sx] = siteEl.checked
+    //     }
+    //
+    //   })
+    //
+    // })
+
+    return sites
   },
-  getSurveyDetailDefects: (state) => {
-    let arrays = []
+  getYellowDetails: (state, getters) => (id) => {
+    let site = getters.getSiteDetailsById(id)
 
-    Object.keys(state.data).forEach(site => {
-      let el = state.data[site]
-      el = isProxy(el) ? toRaw(el) : el
+    return {
+      site_name: site.site_name,
+      latitude: site.latitude,
+      longitude: site.longitude,
+      site_type: site.site_type,
+      building_height: site.building_height,
+      structure_type: '', // TODO (where does this come from)
+    }
+  },
+  getOrangeDetails: (state, getters) => (id) => {
+    let site = getters.getSiteDetailsById(id)
 
-      el.defects.forEach(def => {
-        arrays.push({
-          ...def,
-          id: site,
-          defect_type: 'Other',
-          description: def['defect_description'],
-        })
-      })
+    // quality acceptance signatures
+    let date_quality_acceptance = site.reviewDetails.signatures.quality_reviewer_signoff.signedOn
+    let date_final_acceptance = site.reviewDetails.signatures.final_reviewer_signoff.signedOn
 
-    })
+    if (date_quality_acceptance) date_quality_acceptance = date_quality_acceptance.split('T')[0]
+    if (date_final_acceptance) date_final_acceptance = date_final_acceptance.split('T')[0]
 
-    return arrays
-  }
+    // survey signature
+    let signature = site.reviewDetails.form_signature.signatures[0]
+    if (signature) signature = signature.signedOn
+    if (signature) signature = signature.split('T')[0]
+
+    return {
+      site_name: site.site_name,
+      survey_date: site.reviewDetails.survey_date, // Date of Survey
+      survey_status: '', // TODO: Survey Status (where does this come from)
+      date_survey_completed: signature, // TODO: Survey Completed Date (is this the date it was signed)
+      quality_review_engineer: site.reviewDetails.quality_engineer, // Quality Engineer
+      quality_review_status: site.reviewDetails.quality_review_status, // Quality Review Status
+      date_quality_acceptance: date_quality_acceptance, // Quality Acceptance Date
+      date_final_acceptance: date_final_acceptance, // Final Acceptance Date
+    }
+  },
 }
 
 String.prototype.slugify = function (separator = '_') {
@@ -58,9 +104,21 @@ String.prototype.slugify = function (separator = '_') {
     .replace(/\s+/g, separator)
 }
 
+String.prototype.titleCase = function () {
+  return this.toString()
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
+}
+
 // actions
 const actions = {
-  'PROCESS_FILE': (context, payload) => {
+  'PROCESS_SITE': (context, payload) => {
     let data = payload.items
 
     // extract site id
@@ -68,12 +126,43 @@ const actions = {
       el => el.description.includes('Site ID'))[0].content
     data = data.filter(el => !el.description.includes('Site ID'))
 
-    // if the site ID is valid, continue
+      // if site already exists
+    let siteAlreadyExists = context.getters.siteAlreadyExists(siteId)
+    if (siteAlreadyExists) {
+      // console.log('site ' + siteId + ' already exists')
+      // console.log(payload.formVersion + ' > ' + context.getters.siteFormVersion(siteId))
+
+      // compare which version is greater
+      let previousSiteFormVersion = context.getters.siteFormVersion(siteId)
+      if (payload.formVersion > previousSiteFormVersion) {
+        // console.log('delete previous')
+        // if the current one is greater (delete other and continue processing this site)
+        context.commit('DELETE_DUPLICATE_SITE', {
+          siteId: siteId,
+        })
+        // then continue below
+        context.commit('ADD_NEW_WARNING', {
+          msg: `Site ID "${siteId}" exists with an older version (${previousSiteFormVersion}), replacing with (${payload.formVersion}).`
+        })
+      } else {
+        // if the one in the store is greater (ignore this site)
+        context.commit('ADD_NEW_WARNING', {
+          msg: `Site ID "${siteId}" already exists with a newer version (${previousSiteFormVersion}), skipping.`
+        })
+        return true;
+      }
+    }
+
+
     if (_validSite(siteId)) {
       context.dispatch('HANDLE_SITE', {
         ...payload,
         items: data,
         siteId: siteId,
+      })
+    } else {
+      context.commit('ADD_NEW_WARNING', {
+        msg: `Site ID "${siteId}" is not in the valid sites list: ignoring submission.`
       })
     }
   },
@@ -94,6 +183,7 @@ const actions = {
     data = data.filter(el => !el.description.includes('Building Details'))
 
     buildingDetails = _reduceSurveyDetails(buildingDetails)
+    // console.log(buildingDetails)
     let building_height = buildingDetails['building_height_m']
 
     // extract Survey Details
@@ -101,13 +191,27 @@ const actions = {
       el => el.description.includes('Survey Details'))[0]
     data = data.filter(el => !el.description.includes('Survey Details'))
 
+    // tower works
+    let towerWorks = data.filter(el => el.description.includes('Tower Works Completed or Ongoing'))[0]
+    data = data.filter(el => !el.description.includes('Tower Works Completed or Ongoing'))
+    towerWorks = _reduceDropdown(towerWorks)
+
+    // console.log(surveyDetails)
+
     // get defects
     let defects = data.filter(el => el.description.includes('Defects')
       || el.description.includes('Unused Equipment')
-      || el.description.includes('Unused equipment'))
+      || el.description.includes('Unused equipment')
+      || el.description.includes('Record Defect')
+      || el.description.includes('Record Quality Engineer Assessment'))
     data = data.filter(el => !el.description.includes('Defects'))
     data = data.filter(el => !el.description.includes('Unused Equipment'))
     data = data.filter(el => !el.description.includes('Unused equipment'))
+    data = data.filter(el => !el.description.includes('Record Defect'))
+    data = data.filter(el => !el.description.includes('Record Quality Engineer Assessment'))
+
+    let checkboxTables = data.filter(el => el.description.includes('Table name'))
+    data = data.filter(el => !el.description.includes('Table name'))
 
     // get structures
     // Project Stratosphere Tower Equipment Audit Sheet_V3.1
@@ -134,16 +238,72 @@ const actions = {
     let acu = data.filter(el => el.description.includes('ACU'))
     data = data.filter(el => !el.description.includes('ACU'))
 
+    // signatures
+    let signatures = data.filter(el => el.kind === 'signature')
+    signatures = _reduceAllDetails(signatures)
+    // console.log(signatures)
+    data = data.filter(el => el.kind !== 'signature')
+
+    // other = other.filter(el => !el.description.includes('Signature'))
+
+    // console.log(other)
+    let transmissionDetails = data.filter(el => el.description.includes('Record Transmission Type'))
+    data = data.filter(el => !el.description.includes('Record Transmission Type'))
+
+    if (Array.isArray(transmissionDetails)) {
+      transmissionDetails = transmissionDetails[0]
+    }
+
+    // console.log(other)
+    // let gridDetails = data.filter(el => el.description.includes('Grid Connection Details'))
+    // data = data.filter(el => !el.description.includes('Grid Connection Details'))
+    //
+    // gridDetails = _reduceAllDetails(gridDetails)
+    //
+    // console.log(gridDetails)
+
+
     // everything else
     let other = data
     other = other.filter(el => el.kind !== 'preFilledText')
-    other = other.filter(el => el.kind !== 'signature')
-    other = other.filter(el => !el.description.includes('Signature'))
     other = other.filter(el => !el.description.includes('Photos'))
     other = _reduceAllDetails(other)
 
     // survey details
     let _surveyDetails = _reduceSurveyDetails(surveyDetails)
+
+
+    let gridConnectionDetails = {}
+
+    if (other['grid_connection_details'][0]) {
+      gridConnectionDetails = {
+        grid_connection: other['grid_connection_details'][0]['grid_connection'] ?? undefined,
+        no_of_phases: other['grid_connection_details'][0]['no_of_phases'] ?? undefined,
+        transformer_count: other['grid_connection_details'][0]['transformer_count'] ?? undefined,
+        transformer_1_size: other['grid_connection_details'][0]['transformer_1_size'] ?? undefined,
+        transformer_2_size: other['grid_connection_details'][0]['transformer_2_size'] ?? undefined,
+        transformer_3_size: (other['grid_connection_details'][0]['transformer_3_size'] || other['grid_connection_details'][0]['ttransformer_3_size']) ?? undefined, // spelling mistake
+      }
+    }
+
+
+    // review details
+    let _processedReviewDetails = {
+      quality_engineer: (typeof other['quality_engineer'] == 'string' ? other['quality_engineer'] : undefined),
+      quality_review_status: (typeof other['quality_review_status'] == 'string' ? other['quality_review_status'] : undefined),
+      survey_date: _surveyDetails['date'].split('T')[0],
+      signatures,
+      form_signature: other['signature'],
+    }
+
+    let recordTowerWorks = other['record_tower_works']
+    // console.log(recordTowerWorks)
+    recordTowerWorks = recordTowerWorks.map(el => {
+      return el['describe_recentongoing_work']
+    }).join('; ')
+
+    // console.log(recordTowerWorks)
+
     let _processedSurveyDetails = {
       id: siteId,
       site_name: _surveyDetails.site_name,
@@ -151,12 +311,7 @@ const actions = {
       longitude: _surveyDetails.longitude,
       building_height: building_height,
       site_type: other.site_type,
-      grid_connection: other['grid_connection_details']['grid_connection'],
-      no_of_phases: other['grid_connection_details']['no_of_phases'],
-      transformer_count: other['grid_connection_details']['transformer_count'],
-      transformer_1_size: other['grid_connection_details']['transformer_1_size'],
-      transformer_2_size: other['grid_connection_details']['transformer_2_size'],
-      transformer_3_size: (other['grid_connection_details']['transformer_3_size'] || other['grid_connection_details']['ttransformer_3_size']), // spelling mistake
+      ...gridConnectionDetails,
       other_sitestowers_within_500m: other['are_there_any_other_sitestowers_within_500m'],
       within_0_to_100m: other['nearby_sitestowers']['within_0_to_100m'],
       within_100m_to_200m: other['nearby_sitestowers']['within_100m_to_200m'],
@@ -168,12 +323,18 @@ const actions = {
       compound_external_photos: other['compound_details']['external_photos'],
       record_site_earthing_details: other['record_site_earthing_details'],
       site_earthing_status: other['site_earthing_details']['site_earthing_status'],
-      record_transmission_type: other['record_transmission_type'],
       record_site_ac_distribution_details: other['record_site_ac_distribution_details'],
       transfer_switch_on_site: other['transfer_switch_on_site'],
       transfer_switch_type_type: other['transfer_switch_details']['transfer_switch_type_type'],
-      defects: other['record_defect'],
+      // defects: other['record_defect'],
       surge_suppression_installed: other['surge_suppression_installed'],
+      reviewDetails: _processedReviewDetails,
+      record_transmission_type: transmissionDetails,
+      transmission_type: transmissionDetails,
+      location_of_equipment_base_pads: other['location_of_equipment_base_pads'],
+      automatic_voltage_regulator_installed: other['automatic_voltage_regulator_installed'],
+      recent_ongoing_tower_works: towerWorks,
+      record_tower_works: recordTowerWorks,
     }
 
     delete other['site_type']
@@ -190,8 +351,22 @@ const actions = {
     delete other['transfer_switch_on_site']
     delete other['transfer_switch_details']
     delete other['view_the_instructions_for_tower_leg_designation_and_recording_of_tower_and_equipment_details']
-    delete other['record_defect']
+    // delete other['record_defect']
     delete other['surge_suppression_installed']
+    delete other['location_of_equipment_base_pads']
+    delete other['signoff_by_smart_representative']
+    delete other['signoff_by_survey_contractor']
+    delete other['number_of_roomsshelters']
+    delete other['survey_completion_date']
+    delete other['reasons_for_referral_back_to_survey_team']
+    delete other['automatic_voltage_regulator_installed']
+    delete other['record_tower_works']
+
+    delete other['quality_engineer']
+    delete other['quality_review_status']
+    delete other['signature']
+    delete other['assign_quality_engineer']
+
 
     let response = {
       formVersion,
@@ -199,6 +374,7 @@ const actions = {
       formId,
       siteId,
       surveyDetails: _processedSurveyDetails,
+      reviewDetails: _processedReviewDetails,
       structures,
       generators,
       batteries,
@@ -207,6 +383,7 @@ const actions = {
       defects,
       acu,
       other,
+      tables: checkboxTables,
     }
 
     // console.log(response)
@@ -222,8 +399,24 @@ const actions = {
 // mutations
 const mutations = {
   'PROCESS': (state, data) => {
-    // TODO add a warning if the same siteId exists twice in the upload
-    state.data[data.siteId] = data.surveyDetails
+    let surveyDetails = data.surveyDetails
+
+    Object.keys(surveyDetails).forEach(sx => {
+      let siteEl = surveyDetails[sx]
+
+      if (siteEl && siteEl.kind === 'yesNoCheckbox' && sx !== 'transmission_type') {
+        surveyDetails[sx] = siteEl.checked
+      }
+
+    })
+
+
+    state.data[data.siteId] = surveyDetails
+  },
+  'DELETE_DUPLICATE_SITE': (state, data) => {
+    let newState = Object.assign({}, state)
+    delete newState.data[data.siteId]
+    state = newState
   }
 }
 

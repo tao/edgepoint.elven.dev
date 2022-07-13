@@ -84,6 +84,11 @@ const mutations = {
       rectifiers: rectifiersObj,
     })
 
+  },
+  'DELETE_DUPLICATE_SITE': (state, data) => {
+    let newState = state
+    delete newState.data[data.siteId]
+    return newState
   }
 }
 

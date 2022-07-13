@@ -6,7 +6,7 @@
         <ul class="mb-4 divide-y border-t border-b border-amber-400 bg-amber-50 -mx-4">
             <li v-for="file in files" class="p-3">
                 {{ file.name }} <span class="text-amber-700 text-xs">({{ Math.floor(file.size/1024) }} kb)</span>
-<!--                <button class="px-3 py-1 mx-2 text-sm bg-red-300 hover:bg-red-400 rounded-md float-right" @click="removeFile(file)" title="Remove">&#10005;</button>-->
+                <button class="px-3 py-1 mx-2 text-sm bg-red-300 hover:bg-red-400 rounded-md float-right" @click="removeFile(file)" title="Remove">&#10005;</button>
             </li>
             <li v-if="files.length === 0" class="p-3 italic">
                 (Drag them over here)
@@ -31,12 +31,19 @@
             <li v-for="file in processedFiles()">{{ file }}</li>
         </ul>
     </div>
+
+    <div class="border rounded-lg p-4">
+        <h2 class="text-lg mb-4 font-semibold">Warnings</h2>
+        <ul class="list-decimal px-8">
+            <li v-for="alert in warnings()">{{ alert }}</li>
+        </ul>
+    </div>
 </template>
 
 <script>
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
-import { COLUMN_NAMES, DEFECT_COLUMNS, STRUCTURE_COLUMNS } from '../constants/columns'
+import { COLUMN_NAMES, DEFECT_ASSESSMENT_COLUMNS, DEFECT_COLUMNS, STRUCTURE_COLUMNS } from '../constants/columns'
 
 export default {
     data() {
@@ -56,6 +63,9 @@ export default {
         },
     },
     methods: {
+        warnings() {
+            return this.$store.getters.getWarnings
+        },
         processedFiles() {
             return this.$store.getters.getProcessedFiles
         },
@@ -104,7 +114,7 @@ export default {
 
                 // process array and send to reducer
                 resultArr.forEach(result => {
-                    this.$store.dispatch('PROCESS_FILE', result)
+                    this.$store.dispatch('PROCESS_SITE', result)
                 })
 
             }, false);
@@ -136,7 +146,19 @@ export default {
             worksheet.columns = COLUMN_NAMES
 
             // add styles
+            let emeraldBackground = {
+                type: 'pattern',
+                pattern:'solid',
+                fgColor:{argb:'96c8a2'},
+            }
+
+            let headingFont = {
+                size: 12,
+            }
+
             worksheet.getRow(1).alignment = { wrapText: true }
+            worksheet.getRow(1).fill = emeraldBackground
+            worksheet.getRow(1).font = headingFont
 
             let sites = this.$store.getters.getValidSubmissions
 
@@ -147,8 +169,18 @@ export default {
             let acu = this.$store.getters.getAcus
 
             sites.forEach(site => {
+
+                let orangeDetails = this.$store.getters.getOrangeDetails(site)
+
+                let transmission_type_from_table = this.$store.getters.getTransmissionType(site, details[site]['transmission_type'])
+                // console.log(transmission_type_from_table)
+
+                let towerDetails = this.$store.getters.getTowerDetails(site)
+
                 worksheet.addRow({
                     id: site,
+                    ...towerDetails,
+                    ...orangeDetails,
                     ...details[site],
                     ...generators[site],
                     ...batteries[site],
@@ -159,23 +191,28 @@ export default {
                     amount_batteries: this.$store.getters.countBatteries(site),
                     amount_acu: this.$store.getters.countAcus(site),
                     amount_generators: this.$store.getters.countGenerators(site),
+                    amount_structures: this.$store.getters.countStructures(site),
+                    transmission_type: transmission_type_from_table,
                 })
             })
 
             // file writing
             workbook.xlsx.writeBuffer().then((data) => {
                 const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' });
-                saveAs(blob, 'surveys.xlsx');
+                saveAs(blob, 'Survey Comparisons.xlsx');
             });
         },
         downloadDefects: async function() {
             const workbook = new ExcelJS.Workbook();
-            const worksheet = workbook.addWorksheet('My Sheet');
+            const worksheet = workbook.addWorksheet('Defects');
+            const assessment = workbook.addWorksheet('Quality Assessment')
 
             worksheet.columns = DEFECT_COLUMNS
+            assessment.columns = DEFECT_ASSESSMENT_COLUMNS
 
             // add styles
             worksheet.getRow(1).alignment = { wrapText: true }
+            assessment.getRow(1).alignment = { wrapText: true }
 
             let emeraldBackground = {
                 type: 'pattern',
@@ -186,6 +223,15 @@ export default {
             let headingFont = {
                 size: 12,
             }
+
+            assessment.getCell('A1').fill = emeraldBackground
+            assessment.getCell('A1').font = headingFont
+
+            assessment.getCell('B1').fill = emeraldBackground
+            assessment.getCell('B1').font = headingFont
+
+            assessment.getCell('C1').fill = emeraldBackground
+            assessment.getCell('C1').font = headingFont
 
             worksheet.getCell('A1').fill = emeraldBackground
             worksheet.getCell('A1').font = headingFont
@@ -208,23 +254,54 @@ export default {
             worksheet.getCell('G1').fill = emeraldBackground
             worksheet.getCell('G1').font = headingFont
 
-            let defects = this.$store.getters.getDefectsArrays
-            let otherDefects = this.$store.getters.getSurveyDetailDefects
-            defects = defects.concat(otherDefects)
+            worksheet.getCell('H1').fill = emeraldBackground
+            worksheet.getCell('H1').font = headingFont
+
+            worksheet.getCell('I1').fill = emeraldBackground
+            worksheet.getCell('I1').font = headingFont
+
+            worksheet.getCell('J1').fill = emeraldBackground
+            worksheet.getCell('J1').font = headingFont
+
+            worksheet.getCell('K1').fill = emeraldBackground
+            worksheet.getCell('K1').font = headingFont
+
+            worksheet.getCell('L1').fill = emeraldBackground
+            worksheet.getCell('L1').font = headingFont
+
+            worksheet.getCell('M1').fill = emeraldBackground
+            worksheet.getCell('M1').font = headingFont
+
+            worksheet.getCell('N1').fill = emeraldBackground
+            worksheet.getCell('N1').font = headingFont
+
+            worksheet.getCell('O1').fill = emeraldBackground
+            worksheet.getCell('O1').font = headingFont
 
             this.$store.getters.getDefectsArrays.forEach(defect => {
-                worksheet.addRow(defect);
+
+                let yellowDetails = this.$store.getters.getYellowDetails(defect.id)
+                let orangeDetails = this.$store.getters.getOrangeDetails(defect.id)
+
+                worksheet.addRow({
+                    ...orangeDetails,
+                    ...defect,
+                });
+            })
+
+            this.$store.getters.getDefectAssessment.forEach(defect => {
+                assessment.addRow(defect)
             })
 
             // file writing
             workbook.xlsx.writeBuffer().then((data) => {
                 const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' });
-                saveAs(blob, 'defects.xlsx');
+                saveAs(blob, 'Defects.xlsx');
             });
         },
         downloadStructures: async function() {
             const workbook = new ExcelJS.Workbook();
-            const worksheet = workbook.addWorksheet('My Sheet');
+            const worksheet = workbook.addWorksheet('Structures');
 
             worksheet.columns = STRUCTURE_COLUMNS
 
@@ -268,14 +345,68 @@ export default {
             worksheet.getCell('I1').fill = emeraldBackground
             worksheet.getCell('I1').font = headingFont
 
-            this.$store.getters.getEquipmentArrays.forEach(defect => {
-                worksheet.addRow(defect);
+            worksheet.getCell('J1').fill = emeraldBackground
+            worksheet.getCell('J1').font = headingFont
+
+            worksheet.getCell('K1').fill = emeraldBackground
+            worksheet.getCell('K1').font = headingFont
+
+            worksheet.getCell('L1').fill = emeraldBackground
+            worksheet.getCell('L1').font = headingFont
+
+            worksheet.getCell('M1').fill = emeraldBackground
+            worksheet.getCell('M1').font = headingFont
+
+            worksheet.getCell('N1').fill = emeraldBackground
+            worksheet.getCell('N1').font = headingFont
+
+            worksheet.getCell('O1').fill = emeraldBackground
+            worksheet.getCell('O1').font = headingFont
+
+            worksheet.getCell('P1').fill = emeraldBackground
+            worksheet.getCell('P1').font = headingFont
+
+            worksheet.getCell('Q1').fill = emeraldBackground
+            worksheet.getCell('Q1').font = headingFont
+
+            worksheet.getCell('R1').fill = emeraldBackground
+            worksheet.getCell('R1').font = headingFont
+
+            worksheet.getCell('S1').fill = emeraldBackground
+            worksheet.getCell('S1').font = headingFont
+
+            worksheet.getCell('T1').fill = emeraldBackground
+            worksheet.getCell('T1').font = headingFont
+
+            worksheet.getCell('U1').fill = emeraldBackground
+            worksheet.getCell('U1').font = headingFont
+
+            worksheet.getCell('V1').fill = emeraldBackground
+            worksheet.getCell('V1').font = headingFont
+
+            worksheet.getCell('W1').fill = emeraldBackground
+            worksheet.getCell('W1').font = headingFont
+
+            worksheet.getCell('X1').fill = emeraldBackground
+            worksheet.getCell('X1').font = headingFont
+
+
+            this.$store.getters.getEquipmentArrays.forEach(structureDetails => {
+
+                let yellowDetails = this.$store.getters.getYellowDetails(structureDetails.id)
+                let orangeDetails = this.$store.getters.getOrangeDetails(structureDetails.id)
+
+                worksheet.addRow({
+                    ...yellowDetails,
+                    ...orangeDetails,
+                    ...structureDetails,
+                });
             })
 
             // file writing
             workbook.xlsx.writeBuffer().then((data) => {
                 const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' });
-                saveAs(blob, 'structures.xlsx');
+                saveAs(blob, 'Structures.xlsx');
             });
         }
     }

@@ -9,6 +9,8 @@ import rectifiers from './rectifiers'
 import acu from './acu'
 import sites from './sites'
 import files from './files'
+import tables from './tables'
+import warnings from './warnings'
 
 const debug = process.env.NODE_ENV !== 'production'
 
@@ -24,6 +26,8 @@ export default createStore({
     sites,
     files,
     acu,
+    tables,
+    warnings,
   },
   strict: debug,
   plugins: debug ? [createLogger()] : [],

@@ -1,5 +1,5 @@
 const getDefaultState = () => ({
-  sites: []
+  sites: {}
 })
 
 // initial state
@@ -8,7 +8,13 @@ const state = () => getDefaultState()
 // getters
 const getters = {
   getValidSubmissions: (state) => {
-    return state.sites
+    return Object.values(state.sites).map(el => el.siteId)
+  },
+  siteAlreadyExists: (state, getters) => (id) => {
+    return getters.getValidSubmissions.includes(id)
+  },
+  siteFormVersion: (state) => (id) => {
+    return parseInt(state.sites[id].formVersion)
   }
 }
 
@@ -18,7 +24,15 @@ const actions = {}
 // mutations
 const mutations = {
   'PROCESS': (state, data) => {
-    state.sites.push(data.siteId)
+    state.sites[data.siteId] = {
+      siteId: data.siteId,
+      formVersion: data.formVersion,
+    }
+  },
+  'DELETE_DUPLICATE_SITE': (state, data) => {
+    let newState = state
+    delete newState[data.siteId]
+    return newState
   }
 }
 
