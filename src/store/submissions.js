@@ -14,7 +14,10 @@ const getters = {
     return getters.getValidSubmissions.includes(id)
   },
   siteFormVersion: (state) => (id) => {
-    return parseInt(state.sites[id].formVersion)
+    return state.sites[id].formVersion
+  },
+  siteAppVersion: (state) => (id) => {
+    return state.sites[id].appVersion
   }
 }
 
@@ -27,6 +30,7 @@ const mutations = {
     state.sites[data.siteId] = {
       siteId: data.siteId,
       formVersion: data.formVersion,
+      appVersion: data.appVersion,
     }
   },
   'DELETE_DUPLICATE_SITE': (state, data) => {

@@ -30,6 +30,7 @@ const getters = {
 
       })
 
+
       obj[site] = responseObj
 
     })
@@ -54,10 +55,8 @@ const mutations = {
     generators = _removeUnansweredDuplicates(generators)
     generators = _reduceAllDetails(generators)
 
-
     let generatorObj = []
     let responseObj = Object.assign({}, generators)
-
 
     // group by battery #
     Object.keys(generators).map(key => {
@@ -67,11 +66,9 @@ const mutations = {
 
         let genNum = match[1]
         generatorObj.push(generators[key][0])
-        // batteryObj[batteryNum] = batteries[key][0]
 
         delete responseObj[key]
       }
-
     })
 
     state.data[data.siteId] = Object.assign({}, {

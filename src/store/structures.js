@@ -15,23 +15,45 @@ const state = () => getDefaultState()
 const getters = {
   countStructures: (state) => (id) => {
     let total = state.data[id].total
+    let before7Count = state.data[id].before7Count
+    let after7Count = state.data[id].after7Count
 
     // if (total === undefined) {
     //   total = Object.keys(state.data[id].structures).length
     // }
 
-    return total
+    return {
+      amount_structures: total,
+      amount_structures_before_7: before7Count,
+      amount_structures_above_7: after7Count,
+    }
   },
   getTowerDetails: (state) => (id) => {
     let firstStructure = state.data[id].structures[1]
+    let secondStructure = state.data[id].structures[2]
+
+    let res = {}
     if (firstStructure) {
-      return {
-        tower_type: firstStructure.details[0].structure_1_type,
-        tower_height: firstStructure.height[0].structure_height
-      }
-    } else {
-      return {}
+      res['tower_1_type'] = ((firstStructure.details[0]
+          ? firstStructure.details[0].structure_type
+          : undefined) ?? undefined)
+
+      res['tower_1_height'] = ((firstStructure.height[0]
+          ? firstStructure.height[0].structure_height
+          : undefined) ?? undefined)
     }
+
+    if (secondStructure) {
+      res['tower_2_type'] = ((secondStructure.details[0]
+        ? secondStructure.details[0].structure_type
+        : undefined) ?? undefined)
+
+      res['tower_2_height'] = ((secondStructure.height[0]
+        ? secondStructure.height[0].structure_height
+        : undefined) ?? undefined)
+    }
+
+    return res;
   },
   getEquipmentArrays: (state) => {
     let arrays = []
@@ -53,7 +75,7 @@ const getters = {
             structureId: `Structure ${structureId}`,
             structure_type: elx.details[0][`structure_type`],
             fall_arrest: elx.details[0][`fall_arrest_system`],
-            // structure_height: elx.height[0]['structure_height'],
+            structure_height: elx.height[0]['structure_height'],
             ...ed,
           })
         })
@@ -75,11 +97,43 @@ const mutations = {
 
     let structures = data.structures
 
-    // get total
-    let totalField = structures.filter(el => el.description.includes('Total Number of Separate Structures'))
-    let total = undefined
-    structures = structures.filter(el => !el.description.includes('Total Number of Separate Structures'))
+    // console.log(structures)
 
+
+    // clean
+    structures = structures.filter(el => el.kind !== 'preFilledText')
+
+
+    // console.log('total')
+    // console.log(total)
+
+    // console.log(structures)
+
+    // console.log('before & after')
+    let before7Count, after7Count
+    let before7 = structures.filter(el => el.description.includes('up to 7'))
+    structures = structures.filter(el => !el.description.includes('Up to 7'))
+
+    let after7 = structures.filter(el => el.description.includes('in excess of 7'))
+    structures = structures.filter(el => !el.description.includes('in excess of 7'))
+
+
+    // numbers before and after 7
+    if (before7[0] && before7[0]['selectedItems'] && before7[0]['selectedItems'][0]) {
+      before7Count = before7[0]['selectedItems'][0]['value'] ?? undefined
+    }
+
+    if (after7[0] && after7[0]['selectedItems'] && after7[0]['selectedItems'][0]) {
+      after7Count = after7[0]['selectedItems'][0]['value'] ?? undefined
+    }
+
+    // console.log('before ' + before7Count)
+    // console.log('after ' + after7Count)
+
+    // get total
+    let totalField = structures.filter(el => el.description.includes('Number of Separate Structures'))
+    let total = undefined
+    structures = structures.filter(el => !el.description.includes('Number of Separate Structures'))
 
     if (Array.isArray(totalField) && totalField.length > 0) {
       try {
@@ -96,11 +150,10 @@ const mutations = {
       }
     }
 
-    // console.log('total')
-    // console.log(total)
+
+
 
     // clean
-    structures = structures.filter(el => el.kind !== 'preFilledText')
     structures = structures.filter(el => el.kind !== 'category')
 
     // console.log(structures)
@@ -142,6 +195,7 @@ const mutations = {
     })
 
     // remap structure keys to remove number in keyname
+    let newStructureObj = {}
     Object.keys(structureObj).map(key => {
       let structureEl = structureObj[key]
 
@@ -165,14 +219,28 @@ const mutations = {
 
 
       let height = structureEl['height']
+      // console.log('height')
+      // console.log(height)
+
       height = height.map(el => {
+        // console.log(el)
+
+        let unNumberedHeight = el['structure_height']
+        let numberedHeight = el[`structure_${key}_height`]
+
+        // console.log(unNumberedHeight)
+        // console.log(numberedHeight)
+
         return {
-          ...el,
-          height: el[`structure_${key}_height`],
+          structure_height: (
+            unNumberedHeight ?? numberedHeight ?? undefined
+          )
         }
       })
 
-      return {
+      // console.log(height)
+
+      newStructureObj[key] = {
         details,
         equipment_details,
         faces,
@@ -180,12 +248,13 @@ const mutations = {
       }
     })
 
+    structureObj = newStructureObj
 
     // reorganise structures
     let structureFirstKey = Object.keys(structureObj).sort()[0]
     let structuresStartsAt8 = (parseInt(structureFirstKey) === 8)
 
-    if (total < 7 && structuresStartsAt8) {
+    if ((!total || total < 7) && structuresStartsAt8) {
       let renumberedStructureObj = {}
       Object.keys(structureObj).sort().forEach(key => {
         let count = (key - 7)
@@ -216,14 +285,15 @@ const mutations = {
 
 
         let height = structureEl['height']
-        height = height.map(el => {
-          let res = {
-            ...el,
-            [`structure_${count}_height`]: el[`structure_${key}_height`],
-          }
-          delete res[`structure_${key}_height`]
-          return res
-        })
+        // height = height.map(el => {
+        //   let res = {
+        //     ...el,
+        //     [`structure_${count}_height`]: el[`structure_${key}_height`],
+        //     [`structure_${count}_height`]: el[`structure_${key}_height`],
+        //   }
+        //   delete res[`structure_${key}_height`]
+        //   return res
+        // })
 
 
         renumberedStructureObj[count] = {
@@ -238,11 +308,15 @@ const mutations = {
     }
 
 
+    // console.log(structureObj)
+
     state.data[data.siteId] = Object.assign({}, {
       ...responseObj,
       siteId: data.siteId,
       structures: structureObj,
       total: total,
+      before7Count,
+      after7Count,
     })
 
   },

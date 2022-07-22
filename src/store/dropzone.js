@@ -82,7 +82,6 @@ const getters = {
     return {
       site_name: site.site_name,
       survey_date: site.reviewDetails.survey_date, // Date of Survey
-      survey_status: '', // TODO: Survey Status (where does this come from)
       date_survey_completed: signature, // TODO: Survey Completed Date (is this the date it was signed)
       quality_review_engineer: site.reviewDetails.quality_engineer, // Quality Engineer
       quality_review_status: site.reviewDetails.quality_review_status, // Quality Review Status
@@ -126,6 +125,9 @@ const actions = {
       el => el.description.includes('Site ID'))[0].content
     data = data.filter(el => !el.description.includes('Site ID'))
 
+    // clean blank spaces
+    siteId = siteId.trim()
+
       // if site already exists
     let siteAlreadyExists = context.getters.siteAlreadyExists(siteId)
     if (siteAlreadyExists) {
@@ -133,26 +135,49 @@ const actions = {
       // console.log(payload.formVersion + ' > ' + context.getters.siteFormVersion(siteId))
 
       // compare which version is greater
+      let previousSiteAppVersion = context.getters.siteAppVersion(siteId)
       let previousSiteFormVersion = context.getters.siteFormVersion(siteId)
-      if (payload.formVersion > previousSiteFormVersion) {
-        // console.log('delete previous')
-        // if the current one is greater (delete other and continue processing this site)
-        context.commit('DELETE_DUPLICATE_SITE', {
-          siteId: siteId,
-        })
-        // then continue below
-        context.commit('ADD_NEW_WARNING', {
-          msg: `Site ID "${siteId}" exists with an older version (${previousSiteFormVersion}), replacing with (${payload.formVersion}).`
-        })
+
+      if (payload.appVersion === previousSiteAppVersion) {
+        // console.log('same version')
+        if (payload.formVersion > previousSiteFormVersion) {
+          // console.log(payload.formVersion + ' > ' + previousSiteFormVersion)
+
+          // console.log('delete previous')
+          // if the current one is greater (delete other and continue processing this site)
+          context.commit('DELETE_DUPLICATE_SITE', {
+            siteId: siteId,
+          })
+          // then continue below
+          context.commit('ADD_NEW_WARNING', {
+            msg: `Site ID "${siteId}" exists with the same version (${previousSiteAppVersion}), replacing form version (${previousSiteFormVersion}) with (${payload.formVersion}).`
+          })
+
+        } else {
+          // console.log(payload.formVersion + ' < ' + previousSiteFormVersion)
+
+        }
       } else {
-        // if the one in the store is greater (ignore this site)
-        context.commit('ADD_NEW_WARNING', {
-          msg: `Site ID "${siteId}" already exists with a newer version (${previousSiteFormVersion}), skipping.`
-        })
-        return true;
+
+        if (payload.appVersion > previousSiteAppVersion) {
+          // console.log('delete previous')
+          // if the current one is greater (delete other and continue processing this site)
+          context.commit('DELETE_DUPLICATE_SITE', {
+            siteId: siteId,
+          })
+          // then continue below
+          context.commit('ADD_NEW_WARNING', {
+            msg: `Site ID "${siteId}" exists with an older version (${previousSiteAppVersion}), replacing with (${payload.appVersion}).`
+          })
+        } else {
+          // if the one in the store is greater (ignore this site)
+          context.commit('ADD_NEW_WARNING', {
+            msg: `Site ID "${siteId}" already exists with a newer version (${previousSiteAppVersion}), skipping.`
+          })
+          return true;
+        }
       }
     }
-
 
     if (_validSite(siteId)) {
       context.dispatch('HANDLE_SITE', {
@@ -200,18 +225,22 @@ const actions = {
 
     // get defects
     let defects = data.filter(el => el.description.includes('Defects')
+      || el.description.includes('ACU defects')
       || el.description.includes('Unused Equipment')
       || el.description.includes('Unused equipment')
-      || el.description.includes('Record Defect')
+      // || el.description.includes('Record Defect')
       || el.description.includes('Record Quality Engineer Assessment'))
     data = data.filter(el => !el.description.includes('Defects'))
+    data = data.filter(el => !el.description.includes('ACU defects'))
     data = data.filter(el => !el.description.includes('Unused Equipment'))
     data = data.filter(el => !el.description.includes('Unused equipment'))
-    data = data.filter(el => !el.description.includes('Record Defect'))
+    // data = data.filter(el => !el.description.includes('Record Defect'))
     data = data.filter(el => !el.description.includes('Record Quality Engineer Assessment'))
 
-    let checkboxTables = data.filter(el => el.description.includes('Table name'))
+    let checkboxTables = data.filter(el => el.description.includes('Table name')
+    || el.description.includes('Record Defect'))
     data = data.filter(el => !el.description.includes('Table name'))
+    data = data.filter(el => !el.description.includes('Record Defect'))
 
     // get structures
     // Project Stratosphere Tower Equipment Audit Sheet_V3.1
@@ -254,7 +283,7 @@ const actions = {
       transmissionDetails = transmissionDetails[0]
     }
 
-    // console.log(other)
+
     // let gridDetails = data.filter(el => el.description.includes('Grid Connection Details'))
     // data = data.filter(el => !el.description.includes('Grid Connection Details'))
     //
@@ -269,9 +298,10 @@ const actions = {
     other = other.filter(el => !el.description.includes('Photos'))
     other = _reduceAllDetails(other)
 
+    // console.log(other)
+
     // survey details
     let _surveyDetails = _reduceSurveyDetails(surveyDetails)
-
 
     let gridConnectionDetails = {}
 
@@ -285,7 +315,6 @@ const actions = {
         transformer_3_size: (other['grid_connection_details'][0]['transformer_3_size'] || other['grid_connection_details'][0]['ttransformer_3_size']) ?? undefined, // spelling mistake
       }
     }
-
 
     // review details
     let _processedReviewDetails = {
@@ -302,7 +331,10 @@ const actions = {
       return el['describe_recentongoing_work']
     }).join('; ')
 
+
     // console.log(recordTowerWorks)
+    // console.log(other)
+    // console.log(_surveyDetails)
 
     let _processedSurveyDetails = {
       id: siteId,
@@ -310,22 +342,22 @@ const actions = {
       latitude: _surveyDetails.latitude,
       longitude: _surveyDetails.longitude,
       building_height: building_height,
-      site_type: other.site_type,
+      site_type: (typeof other.site_type === "string" ? other.site_type : undefined),
       ...gridConnectionDetails,
       other_sitestowers_within_500m: other['are_there_any_other_sitestowers_within_500m'],
-      within_0_to_100m: other['nearby_sitestowers']['within_0_to_100m'],
-      within_100m_to_200m: other['nearby_sitestowers']['within_100m_to_200m'],
-      within_200m_to_300m: other['nearby_sitestowers']['within_200m_to_300m'],
-      within_300m_to_500m: other['nearby_sitestowers']['within_300m_to_500m'],
+      within_0_to_100m: (other['nearby_sitestowers'][0] ? other['nearby_sitestowers'][0]['within_0_to_100m'] : undefined),
+      within_100m_to_200m: (other['nearby_sitestowers'][0] ? other['nearby_sitestowers'][0]['within_100m_to_200m'] : undefined),
+      within_200m_to_300m: (other['nearby_sitestowers'][0] ? other['nearby_sitestowers'][0]['within_200m_to_300m'] : undefined),
+      within_300m_to_500m: (other['nearby_sitestowers'][0] ? other['nearby_sitestowers'][0]['within_300m_to_500m'] : undefined),
       record_compound_and_fence_details: other['record_compound_and_fence_details'],
-      compound_length_m: other['compound_details']['length_m'],
-      compound_width_m: other['compound_details']['width_m'],
-      compound_external_photos: other['compound_details']['external_photos'],
+      compound_length_m: (other['compound_details'][0] ? other['compound_details'][0]['length_m'] : undefined),
+      compound_width_m: (other['compound_details'][0] ? other['compound_details'][0]['width_m'] : undefined),
       record_site_earthing_details: other['record_site_earthing_details'],
-      site_earthing_status: other['site_earthing_details']['site_earthing_status'],
+      site_earthing_status: (other['site_earthing_details'][0] ? other['site_earthing_details'][0]['site_earthing_status'] : undefined),
       record_site_ac_distribution_details: other['record_site_ac_distribution_details'],
       transfer_switch_on_site: other['transfer_switch_on_site'],
-      transfer_switch_type_type: other['transfer_switch_details']['transfer_switch_type_type'],
+      transfer_switch_1_type: (other['transfer_switch_details'][0] ? other['transfer_switch_details'][0]['transfer_switch_type_type'] : undefined),
+      transfer_switch_2_type: (other['transfer_switch_details'][1] ? other['transfer_switch_details'][1]['transfer_switch_type_type'] : undefined),
       // defects: other['record_defect'],
       surge_suppression_installed: other['surge_suppression_installed'],
       reviewDetails: _processedReviewDetails,
@@ -345,7 +377,7 @@ const actions = {
     delete other['compound_details']
     delete other['record_compound_and_fence_details']
     delete other['record_site_earthing_details']
-    delete other['site_earthing_details']
+    // delete other['site_earthing_details']
     delete other['record_transmission_type']
     delete other['record_site_ac_distribution_details']
     delete other['transfer_switch_on_site']
@@ -367,13 +399,40 @@ const actions = {
     delete other['signature']
     delete other['assign_quality_engineer']
 
+    let basepads = {}
+    switch (_processedSurveyDetails['location_of_equipment_base_pads']) {
+      case 'Indoor + Outdoor':
+      case 'Outdoor': {
+        if (other['all_outdoor_base_pads'][0]) {
+          let outdoor_basepads = other['all_outdoor_base_pads'][0]
+          Object.keys(outdoor_basepads).forEach(key => {
+            let newKey = `basepads_` + key
+            basepads[newKey] = outdoor_basepads[key]
+          })
+        }
+        break;
+      }
+      case 'Indoor Only': {
+        // none
+        break;
+      }
+    }
+
+    // if using basepads_height_abobe_ground_mm on old forms
+    if (basepads['basepads_height_abobe_ground_mm']) {
+      basepads['basepads_height_above_ground_mm'] = basepads['basepads_height_abobe_ground_mm']
+      delete basepads['basepads_height_abobe_ground_mm']
+    }
 
     let response = {
       formVersion,
       appVersion,
       formId,
       siteId,
-      surveyDetails: _processedSurveyDetails,
+      surveyDetails: {
+        ..._processedSurveyDetails,
+        ...basepads,
+      },
       reviewDetails: _processedReviewDetails,
       structures,
       generators,

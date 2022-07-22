@@ -5,6 +5,7 @@ import batteries from './batteries'
 import generators from './generators'
 import structures from './structures'
 import submissions from './submissions'
+import shelters from './shelters'
 import rectifiers from './rectifiers'
 import acu from './acu'
 import sites from './sites'
@@ -22,6 +23,7 @@ export default createStore({
     generators,
     structures,
     submissions,
+    shelters,
     rectifiers,
     sites,
     files,

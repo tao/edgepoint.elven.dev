@@ -167,6 +167,7 @@ export default {
             let batteries = this.$store.getters.getBatteries
             let rectifiers = this.$store.getters.getRectifiers
             let acu = this.$store.getters.getAcus
+            let shelters = this.$store.getters.getShelters
 
             sites.forEach(site => {
 
@@ -177,6 +178,8 @@ export default {
 
                 let towerDetails = this.$store.getters.getTowerDetails(site)
 
+                let countStructures = this.$store.getters.countStructures(site)
+
                 worksheet.addRow({
                     id: site,
                     ...towerDetails,
@@ -186,20 +189,24 @@ export default {
                     ...batteries[site],
                     ...acu[site],
                     ...rectifiers[site],
-                    // amount_shelters:
+                    ...shelters[site],
+                    amount_shelters: this.$store.getters.countShelters(site),
                     amount_rectifiers: this.$store.getters.countRectifiers(site),
                     amount_batteries: this.$store.getters.countBatteries(site),
                     amount_acu: this.$store.getters.countAcus(site),
                     amount_generators: this.$store.getters.countGenerators(site),
-                    amount_structures: this.$store.getters.countStructures(site),
                     transmission_type: transmission_type_from_table,
+                    ...countStructures,
                 })
             })
 
             // file writing
+            let myDate = new Date()
+            myDate = myDate.toISOString().split('T')[0]
+
             workbook.xlsx.writeBuffer().then((data) => {
                 const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' });
-                saveAs(blob, 'Survey Comparisons.xlsx');
+                saveAs(blob, `${myDate}__Survey Comparisons.xlsx`);
             });
         },
         downloadDefects: async function() {
@@ -294,9 +301,12 @@ export default {
             })
 
             // file writing
+            let myDate = new Date()
+            myDate = myDate.toISOString().split('T')[0]
+
             workbook.xlsx.writeBuffer().then((data) => {
                 const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' });
-                saveAs(blob, 'Defects.xlsx');
+                saveAs(blob, `${myDate}__Defects.xlsx`);
             });
         },
         downloadStructures: async function() {
@@ -404,9 +414,12 @@ export default {
             })
 
             // file writing
+            let myDate = new Date()
+            myDate = myDate.toISOString().split('T')[0]
+
             workbook.xlsx.writeBuffer().then((data) => {
                 const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' });
-                saveAs(blob, 'Structures.xlsx');
+                saveAs(blob, `${myDate}__Structures.xlsx`);
             });
         }
     }

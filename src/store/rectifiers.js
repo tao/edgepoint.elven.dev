@@ -11,7 +11,7 @@ const state = () => getDefaultState()
 // getters
 const getters = {
   countRectifiers: (state) => (id) => {
-    return state.data[id].rectifiers.length
+    return state.data[id].total
   },
   getRectifiers: (state) => {
     let obj = {}
@@ -27,6 +27,11 @@ const getters = {
         Object.keys(rec).forEach(recKey => {
           responseObj[`rectifier_${idx+1}_${recKey}`] = rec[recKey]
         })
+
+        // if using module_slots_available instead of module_slots_unused
+        if (rec[`module_slots_available`] && !rec['module_slots_unused']) {
+          responseObj[`rectifier_${idx+1}_module_slots_unused`] = rec['module_slots_available']
+        }
 
       })
 
@@ -46,6 +51,32 @@ const mutations = {
   'PROCESS': (state, data) => {
 
     let rectifiers = data.rectifiers
+
+    // console.log(rectifiers)
+
+    // get total
+    let totalField = rectifiers.filter(el => el.description.includes('Rectifier Count'))
+    // console.log(totalField)
+    let total = undefined
+    rectifiers = rectifiers.filter(el => !el.description.includes('Rectifier Count'))
+
+    if (Array.isArray(totalField) && totalField.length > 0) {
+      try {
+        let selectedItems = totalField[0]['selectedItems']
+        if (Array.isArray(selectedItems) && selectedItems.length > 0) {
+          total = selectedItems[0]['value'] ?? undefined
+        }
+        if (total !== undefined) {
+          total = parseInt(total)
+        }
+      } catch(e) {
+        console.log('error getting total')
+        console.log(totalField)
+      }
+    }
+
+
+
 
     // clean
     rectifiers = rectifiers.filter(el => el.kind !== 'category')
@@ -78,10 +109,13 @@ const mutations = {
 
     })
 
+    // console.log(rectifiersObj)
+
     state.data[data.siteId] = Object.assign({}, {
       ...responseObj,
       siteId: data.siteId,
       rectifiers: rectifiersObj,
+      total: total,
     })
 
   },

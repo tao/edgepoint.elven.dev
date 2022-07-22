@@ -24,7 +24,7 @@ export function _reduceSurveyDetails (surveyDetails) {
   return response
 }
 
-export function _reduceTableDetails (table) {
+export function _reduceTableDetails (table, includePhotos = true) {
   let rows = table.rows ?? []
   let response = []
 
@@ -37,9 +37,14 @@ export function _reduceTableDetails (table) {
       switch(el.kind) {
         case 'photo': {
           if (el.photos) {
-            let response = el.photos.map(photo => photo.description).filter(el => el !== '').filter(el => el !== undefined)
-            response = (response.length === 1) ? response[0] : response.join('; ')
-            temp[tableTitle] = response
+            if (includePhotos) {
+              let response = el.photos
+                .map(photo => photo.description)
+                .filter(el => el !== '')
+                .filter(el => el !== undefined)
+              response = (response.length === 1) ? response[0] : response.join('; ')
+              temp[tableTitle] = response
+            }
           }
           break;
         }
@@ -108,9 +113,16 @@ export function _reduceAllDetails (details) {
 
     // if the key already exists, push the new data
     let prev = data[el.description.slugify()]
+
     if (prev) {
       if (Array.isArray(obj)) {
-        obj && obj.forEach(item => prev.push(item))
+
+        if (obj) {
+          obj = [{
+            ...prev[0],
+            ...obj[0],
+          }]
+        }
       } else {
         obj = prev
       }

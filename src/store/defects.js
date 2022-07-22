@@ -39,7 +39,7 @@ const getters = {
           // console.log(table)
 
           if (table) {
-            table = _reduceTableDetails(table)
+            table = _reduceTableDetails(table, false)
             // console.log(table)
             table.forEach(tableEl => {
               // console.log(tableEl)
@@ -92,18 +92,63 @@ const getters = {
             // console.log(table)
 
             if (table) {
-            table = _reduceTableDetails(table)
+            table = _reduceTableDetails(table, false)
 
-            // console.log(table)
 
             table.forEach(tableEl => {
-              arrays.push({
-                id: site,
-                defect_type: element.description.replace("Record ", ""),
-                unused_equipment: tableEl.unused_equipment_in_compund ?? tableEl.unused_equipment_in_compound ?? '',
-                position_on_site: tableEl.location_on_site,
-                description: tableEl.equipment_description,
-              })
+
+              let defectType = element.description.replace("Record ", "").replace('?', '')
+
+              switch (defectType) {
+                case 'Compound and External equipment Defects': {
+                  // console.log(tableEl)
+                  arrays.push({
+                    id: site,
+                    defect_type: defectType,
+                    defect_area: tableEl.defect_area,
+                    defect_grade: tableEl.defect_grade,
+                    // unused_equipment: '',
+                    position_on_site: tableEl.position_on_site,
+                    description: tableEl.defect_description,
+                  })
+                  break;
+                }
+                case 'Room/Shelter and Rectifier/Battery/ACU defects': {
+                  console.log(tableEl)
+                  arrays.push({
+                    id: site,
+                    defect_type: defectType,
+                    defect_area: tableEl.defect_area,
+                    defect_grade: tableEl.defect_grade,
+                    // unused_equipment: '',
+                    position_on_site: tableEl.position_in_roomshelter,
+                    description: tableEl.defect_description,
+                  })
+                  break;
+                }
+                case 'Unused Equipment in the Compound': {
+                  // console.log(tableEl)
+                  arrays.push({
+                    id: site,
+                    defect_type: defectType,
+                    unused_equipment: tableEl.unused_equipment_in_compund ?? tableEl.unused_equipment_in_compound ?? '',
+                    position_on_site: tableEl.location_on_site,
+                    description: tableEl.equipment_description,
+                  })
+                  break;
+                }
+                default: {
+                  arrays.push({
+                    id: site,
+                    defect_type: defectType,
+                    unused_equipment: tableEl.unused_equipment_in_compund ?? tableEl.unused_equipment_in_compound ?? '',
+                    position_on_site: tableEl.location_on_site,
+                    description: tableEl.equipment_description,
+                  })
+                }
+              }
+
+
             })
           }
 
@@ -147,6 +192,7 @@ const getters = {
           })
 
           element.map(defect => {
+            // console.log(defect)
             arrays.push({
               id: site,
               defect_type: 'Unused Equipment in the Room/Shelter',
@@ -154,40 +200,41 @@ const getters = {
               // defect_area: 'compound',
               // defect_grade: '4. Minor',
               position_on_site: defect.location_in_roomshelter,
-              description: defect.unused_equipment_in_the_shelter,
+              // description: defect.unused_equipment_in_the_shelter,
             })
           })
         }
 
-        if (k2.includes('record_defect')) {
-
-          // filter an empty object
-          element = element.filter(obj => {
-            return Object.values(obj).filter(el => el !== undefined).filter(el => el !== "").length > 0
-          })
-
-          element.map(defect => {
-            let type = 'Room / Shelter & Rectifier / Battery / ACU Defects'
-            let pos = defect.position_in_roomshelter
-
-            if (defect.defect_area === 'Compound') {
-              type = 'Compound & External Defects'
-              pos = defect.position_on_site
-            }
-
-            arrays.push({
-              id: site,
-              defect_type: type,
-              defect_area: defect.defect_area,
-              defect_grade: defect.defect_grade,
-              position_on_site: pos,
-              description: [defect.defect_description, defect.defect_photo]
-                    .filter(el => el !== undefined)
-                    .filter(el => el !== '')
-                    .join('; '),
-            })
-          })
-        }
+        // if (k2.includes('record_defect')) {
+        //
+        //   // filter an empty object
+        //   element = element.filter(obj => {
+        //     return Object.values(obj).filter(el => el !== undefined).filter(el => el !== "").length > 0
+        //   })
+        //
+        //   element.map(defect => {
+        //     let type = 'Room / Shelter & Rectifier / Battery / ACU Defects'
+        //     let pos = defect.position_in_roomshelter
+        //
+        //     if (defect.defect_area === 'Compound') {
+        //       type = 'Compound & External Defects'
+        //       pos = defect.position_on_site
+        //     }
+        //
+        //     arrays.push({
+        //       id: site,
+        //       defect_type: type,
+        //       defect_area: defect.defect_area,
+        //       defect_grade: defect.defect_grade,
+        //       position_on_site: pos,
+        //       description: defect.defect_description,
+        //       // description: [defect.defect_description, defect.defect_photo]
+        //       //       .filter(el => el !== undefined)
+        //       //       .filter(el => el !== '')
+        //       //       .join('; '),
+        //     })
+        //   })
+        // }
 
       })
 

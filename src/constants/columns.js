@@ -11,7 +11,7 @@ export const DEFECT_COLUMNS = [
   { header: 'Final Acceptance', key: 'date_final_acceptance', width: 20 },
   // defects
   { header: 'Defect Type', key: 'defect_type', width: 50 },
-  { header: 'Unused Equipment', key: 'unused_equipment', width: 20 },
+  { header: 'Unused Equipment', key: 'unused_equipment', width: 50 },
   { header: 'Defect Area', key: 'defect_area', width: 20 },
   { header: 'Defect Grade', key: 'defect_grade', width: 20 },
   { header: 'Location / Position', key: 'position_on_site', width: 50 },
@@ -33,10 +33,10 @@ export const STRUCTURE_COLUMNS = [
   { header: 'Rooftop/ Ground based', key: 'site_type', width: 25 },
   { header: 'Building Height', key: 'building_height', width: 15 },
   { header: 'Structure Type', key: 'structure_type', width: 15 },
+  { header: 'Structure Height', key: 'structure_height', width: 15 },
   { header: 'Fall Arrest System', key: 'fall_arrest', width: 20 },
   // orange
   { header: 'Date of Survey', key: 'survey_date', width: 20 },
-  { header: 'Survey Status', key: 'survey_status', width: 20 },
   { header: 'Survey Completed', key: 'date_survey_completed', width: 20 },
   { header: 'Quality Engineer', key: 'quality_review_engineer', width: 30 },
   { header: 'Quality Review Status', key: 'quality_review_status', width: 30 },
@@ -64,12 +64,15 @@ export const COLUMN_NAMES = [
   { header: 'Building Height', key: 'building_height', width: 15 },
   // { header: 'Structure Type', key: 'structure_type', width: 15 },
   // first structure
-  { header: 'Tower Type', key: 'tower_type', width: 20 },
+  { header: 'Structure #1 Type', key: 'tower_1_type', width: 20 },
   { header: 'No of Structures', key: 'amount_structures', width: 15 },
-  { header: 'Tower Height', key: 'tower_height', width: 15 },
+  { header: 'No of separate structures up to 7', key: 'amount_structures_before_7', width: 15 },
+  { header: 'No of separate structures above 7', key: 'amount_structures_above_7', width: 15 },
+  { header: 'Structure #1 Height', key: 'tower_1_height', width: 15 },
+  { header: 'Structure #2 Type', key: 'tower_2_type', width: 20 },
+  { header: 'Structure #2 Height', key: 'tower_2_height', width: 15 },
   // orange
   { header: 'Date of Survey', key: 'survey_date', width: 20 },
-  { header: 'Survey Status', key: 'survey_status', width: 20 },
   { header: 'Survey Completed', key: 'date_survey_completed', width: 20 },
   { header: 'Quality Engineer', key: 'quality_review_engineer', width: 30 },
   { header: 'Quality Review Status', key: 'quality_review_status', width: 30 },
@@ -77,14 +80,29 @@ export const COLUMN_NAMES = [
   { header: 'Final Acceptance', key: 'date_final_acceptance', width: 20 },
 
   // shelters
-  // TODO add 1 + 2 + 3
   { header: 'Number of Rooms/Shelters', key: 'amount_shelters', width: 15 },
-  { header: 'Room/Shelter Type', key: '', width: 15 },
-  { header: 'Room/Shelter Length (m)', key: '', width: 15 },
-  { header: 'Room/Shelter Width (m)', key: '', width: 15 },
-  { header: 'Room / Shelter Dimension (m x m)', key: '', width: 15 },
-  { header: 'MTD Room / Shelter Dimension (m x m) - cleaned', key: '', width: 15 },
-  { header: 'Room/Shelter Height (m)', key: '', width: 15 },
+
+  { header: 'Room/Shelter 1 Type', key: 'shelter_1_roomshelter_type', width: 15 },
+  { header: 'Room/Shelter 1 Length (m)', key: 'shelter_1_roomshelter_length_m', width: 15 },
+  { header: 'Room/Shelter 1 Width (m)', key: 'shelter_1_roomshelter_width_m', width: 15 },
+  // { header: 'Room / Shelter Dimension (m x m)', key: 'shelter_1_roomshelter_dimension', width: 15 }, // TODO
+  // { header: 'MTD Room / Shelter Dimension (m x m) - cleaned', key: 'shelter_1_roomshelter_dimension_cleaned', width: 15 }, // TODO
+  { header: 'Room/Shelter 1 Height (m)', key: 'shelter_1_roomshelter_height_m', width: 15 },
+
+  { header: 'Room/Shelter 2 Type', key: 'shelter_2_roomshelter_type', width: 15 },
+  { header: 'Room/Shelter 2 Length (m)', key: 'shelter_2_roomshelter_length_m', width: 15 },
+  { header: 'Room/Shelter 2 Width (m)', key: 'shelter_2_roomshelter_width_m', width: 15 },
+  // { header: 'Room / Shelter Dimension (m x m)', key: 'shelter_2_roomshelter_dimension', width: 15 }, // TODO
+  // { header: 'MTD Room / Shelter Dimension (m x m) - cleaned', key: 'shelter_2_roomshelter_dimension_cleaned', width: 15 }, // TODO
+  { header: 'Room/Shelter 2 Height (m)', key: 'shelter_2_roomshelter_height_m', width: 15 },
+
+  { header: 'Room/Shelter 3 Type', key: 'shelter_3_roomshelter_type', width: 15 },
+  { header: 'Room/Shelter 3 Length (m)', key: 'shelter_3_roomshelter_length_m', width: 15 },
+  { header: 'Room/Shelter 3 Width (m)', key: 'shelter_3_roomshelter_width_m', width: 15 },
+  // { header: 'Room / Shelter Dimension (m x m)', key: 'shelter_3_roomshelter_dimension', width: 15 }, // TODO
+  // { header: 'MTD Room / Shelter Dimension (m x m) - cleaned', key: 'shelter_3_roomshelter_dimension_cleaned', width: 15 }, // TODO
+  { header: 'Room/Shelter 3 Height (m)', key: 'shelter_3_roomshelter_height_m', width: 15 },
+
   // rectifiers
   { header: 'Rectifier Count', key: 'amount_rectifiers', width: 15 },
   { header: 'Rectifier 1 Brand', key: 'rectifier_1_rectifier_brand', width: 15 },
@@ -105,6 +123,21 @@ export const COLUMN_NAMES = [
   { header: 'Module 3 Slots Un-used', key: 'rectifier_3_module_slots_unused', width: 15 },
   { header: 'Module 3 Size (W)', key: 'rectifier_3_module_size_w', width: 15 },
   { header: 'Module 3 Slots Installed', key: 'rectifier_3_modules_slots_installed', width: 15 },
+
+  { header: 'Rectifier 4 Brand', key: 'rectifier_4_rectifier_brand', width: 15 },
+  { header: 'Rectifier 4 Model', key: 'rectifier_4_rectifier_model', width: 15 },
+  { header: 'Rectifier 4 Nameplate Capacity (kW)', key: 'rectifier_4_rectifier_nameplate_capacity_kw', width: 15 },
+  { header: 'Module 4 Slots Un-used', key: 'rectifier_4_module_slots_unused', width: 15 },
+  { header: 'Module 4 Size (W)', key: 'rectifier_4_module_size_w', width: 15 },
+  { header: 'Module 4 Slots Installed', key: 'rectifier_4_modules_slots_installed', width: 15 },
+
+  { header: 'Rectifier 5 Brand', key: 'rectifier_5_rectifier_brand', width: 15 },
+  { header: 'Rectifier 5 Model', key: 'rectifier_5_rectifier_model', width: 15 },
+  { header: 'Rectifier 5 Nameplate Capacity (kW)', key: 'rectifier_5_rectifier_nameplate_capacity_kw', width: 15 },
+  { header: 'Module 5 Slots Un-used', key: 'rectifier_5_module_slots_unused', width: 15 },
+  { header: 'Module 5 Size (W)', key: 'rectifier_5_module_size_w', width: 15 },
+  { header: 'Module 5 Slots Installed', key: 'rectifier_5_modules_slots_installed', width: 15 },
+
   // batteries
   { header: 'Battery bank Count', key: 'amount_batteries', width: 15 },
   { header: 'Battery 1 Charged by Rectifier', key: 'battery_1_charged_by_rectifier', width: 15 },
@@ -157,7 +190,7 @@ export const COLUMN_NAMES = [
   { header: 'Generator 1 Size (kVA)', key: 'generator_1_generator_size_kva', width: 15 },
   { header: 'Generator 1 Brand', key: 'generator_1_generator_brand', width: 15 },
   { header: 'Generator 1 Fuel tank capacity (Ltr)', key: 'generator_1_fuel_tank_capacity_ltr', width: 15 },
-  { header: 'Generator 1 Measured Fuel Level (Ltrs)', key: 'generator_1_measured_fuel_levels_ltrs', width: 15 },
+  { header: 'Generator 1 Measured Fuel Level (Ltrs)', key: 'generator_1_measured_fuel_level_ltrs', width: 15 },
   { header: 'Generator 1 DG Controller Brand', key: 'generator_1_dg_controller_brand', width: 15 },
   { header: 'Generator 1 Functionality', key: 'generator_1_generator_functionality', width: 15 },
   { header: 'Generator 1 DG Run-hours (if available)', key: 'generator_1_dg_runhours_if_available', width: 15 },
@@ -175,43 +208,37 @@ export const COLUMN_NAMES = [
   { header: 'Generator 3 DG Controller Brand', key: 'generator_3_dg_controller_brand', width: 15 },
   { header: 'Generator 3 Functionality', key: 'generator_3_generator_functionality', width: 15 },
   { header: 'Generator 3 DG Run-hours (if available)', key: 'generator_3_dg_runhours_if_available', width: 15 },
+
   { header: 'Yes/No - Transfer Switch on site?', key: 'transfer_switch_on_site', width: 15 },
-  { header: 'Transfer Switch Type Type', key: 'transfer_switch_type_type', width: 15 },
+  { header: 'Transfer Switch Type', key: 'transfer_switch_1_type', width: 15 },
+  { header: 'Transfer Switch #2 Type', key: 'transfer_switch_2_type', width: 15 },
+
   // acu
   { header: 'ACU Count', key: 'amount_acu', width: 15 },
-  { header: 'ACU 1 Count', key: 'acu_1_acu_count', width: 15 },
   { header: 'ACU 1 Type', key: 'acu_1_acu_type', width: 15 },
   { header: 'ACU 1 Brand', key: 'acu_1_acu_brand', width: 15 },
   { header: 'ACU 1 Capacity', key: 'acu_1_acu_capacity', width: 15 },
-  { header: 'ACU 2 Count', key: 'acu_2_acu_count', width: 15 },
   { header: 'ACU 2 Type', key: 'acu_2_acu_type', width: 15 },
   { header: 'ACU 2 Brand', key: 'acu_2_acu_brand', width: 15 },
   { header: 'ACU 2 Capacity', key: 'acu_2_acu_capacity', width: 15 },
-  { header: 'ACU 3 Count', key: 'acu_3_acu_count', width: 15 },
   { header: 'ACU 3 Type', key: 'acu_3_acu_type', width: 15 },
   { header: 'ACU 3 Brand', key: 'acu_3_acu_brand', width: 15 },
   { header: 'ACU 3 Capacity', key: 'acu_3_acu_capacity', width: 15 },
-  { header: 'ACU 4 Count', key: 'acu_4_acu_count', width: 15 },
   { header: 'ACU 4 Type', key: 'acu_4_acu_type', width: 15 },
   { header: 'ACU 4 Brand', key: 'acu_4_acu_brand', width: 15 },
   { header: 'ACU 4 Capacity', key: 'acu_4_acu_capacity', width: 15 },
-  { header: 'ACU 5 Count', key: 'acu_5_acu_count', width: 15 },
   { header: 'ACU 5 Type', key: 'acu_5_acu_type', width: 15 },
   { header: 'ACU 5 Brand', key: 'acu_5_acu_brand', width: 15 },
   { header: 'ACU 5 Capacity', key: 'acu_5_acu_capacity', width: 15 },
-  { header: 'ACU 6 Count', key: 'acu_6_acu_count', width: 15 },
   { header: 'ACU 6 Type', key: 'acu_6_acu_type', width: 15 },
   { header: 'ACU 6 Brand', key: 'acu_6_acu_brand', width: 15 },
   { header: 'ACU 6 Capacity', key: 'acu_6_acu_capacity', width: 15 },
-  { header: 'ACU 7 Count', key: 'acu_7_acu_count', width: 15 },
   { header: 'ACU 7 Type', key: 'acu_7_acu_type', width: 15 },
   { header: 'ACU 7 Brand', key: 'acu_7_acu_brand', width: 15 },
   { header: 'ACU 7 Capacity', key: 'acu_7_acu_capacity', width: 15 },
-  { header: 'ACU 8 Count', key: 'acu_8_acu_count', width: 15 },
   { header: 'ACU 8 Type', key: 'acu_8_acu_type', width: 15 },
   { header: 'ACU 8 Brand', key: 'acu_8_acu_brand', width: 15 },
   { header: 'ACU 8 Capacity', key: 'acu_8_acu_capacity', width: 15 },
-  { header: 'ACU 9 Count', key: 'acu_9_acu_count', width: 15 },
   { header: 'ACU 9 Type', key: 'acu_9_acu_type', width: 15 },
   { header: 'ACU 9 Brand', key: 'acu_9_acu_brand', width: 15 },
   { header: 'ACU 9 Capacity', key: 'acu_9_acu_capacity', width: 15 },
@@ -224,21 +251,14 @@ export const COLUMN_NAMES = [
   { header: 'Within 300m to 500m', key: 'within_300m_to_500m', width: 15 },
 
   // compound details
-  { header: 'Yes/No - Record Compound and Fence Details?', key: 'record_compound_and_fence_details', width: 15 },
-  { header: 'Length (m)', key: 'compound_length_m', width: 15 },
-  { header: 'Width (m)', key: 'compound_width_m', width: 15 },
-  { header: 'External Photos', key: 'compound_external_photos', width: 15 },
+  { header: 'Compound Length (m)', key: 'compound_length_m', width: 15 },
+  { header: 'Compound Width (m)', key: 'compound_width_m', width: 15 },
 
   // earthing
-  { header: 'Record Site Earthing Status - Record Site Earthing details?', key: 'record_site_earthing_details', width: 15 },
   { header: 'Site Earthing Status', key: 'site_earthing_status', width: 15 },
 
   // transmission
-  { header: 'Yes/No - Record Transmission Type', key: 'record_transmission_type', width: 15 },
   { header: 'Transmission Type', key: 'transmission_type', width: 25 },
-
-  // distribution
-  { header: 'Yes/No - Record Site AC Distribution Details?', key: 'record_site_ac_distribution_details', width: 15 },
 
   // grid connection details
   { header: 'Grid Connection', key: 'grid_connection', width: 30 },
@@ -250,37 +270,18 @@ export const COLUMN_NAMES = [
 
   // other
   { header: 'Yes/No - Surge Suppression Installed', key: 'surge_suppression_installed', width: 15 },
+  { header: 'Yes/No - Automatic Voltage Regulator Installed?', key: 'automatic_voltage_regulator_installed', width: 15 },
+
   { header: 'Location of equipment Base Pads', key: 'location_of_equipment_base_pads', width: 15 },
 
   // plinth
-  { header: 'Plinth Length (mm)', key: 'plinth_length_mm', width: 15 },
-  { header: 'Plinth Width (mm)', key: 'plinth_width_mm', width: 15 },
-  { header: 'Height above ground (mm)', key: 'height_above_ground_mm', width: 15 },
-  { header: 'Recording space available', key: 'recording_space_available', width: 15 },
-  { header: 'Space unused', key: 'space_unused', width: 15 },
+  { header: 'Plinth Length (mm)', key: 'basepads_plinth_length_mm', width: 15 },
+  { header: 'Plinth Width (mm)', key: 'basepads_plinth_width_mm', width: 15 },
+  { header: 'Height above ground (mm)', key: 'basepads_height_above_ground_mm', width: 15 },
+  { header: 'Space unused', key: 'basepads_space_unused', width: 15 },
 
-  { header: 'Yes/No - Automatic Voltage Regulator Installed?', key: 'automatic_voltage_regulator_installed', width: 15 },
   { header: 'Tower Works Completed or Ongoing', key: 'recent_ongoing_tower_works', width: 30 },
   { header: 'Describe Recent/Ongoing Work', key: 'record_tower_works', width: 30 },
-
-  // unknown
-  // { header: 'Yes/No - Record Unused Equipment in the Room/Shelter', key: '', width: 15 },
-  // { header: 'Location in Room/Shelter', key: '', width: 15 },
-  // { header: 'Equipment description', key: '', width: 15 },
-  // { header: 'Yes/No - Record Room/Shelter and Rectifier/Battery/ACU defects?', key: '', width: 15 },
-  // { header: 'Defect Area', key: '', width: 15 },
-  // { header: 'Defect Grade', key: '', width: 15 },
-  // { header: 'Position in Room/Shelter', key: '', width: 15 },
-  // { header: 'Yes/No - Record Recent/Ongoing Structure Works', key: '', width: 15 },
-  // { header: 'Yes/No - Record Grid Details', key: '', width: 15 },
-  // { header: 'Yes/No - Record Compound and External equipment Defects?', key: '', width: 15 },
-  // { header: 'Defect Area', key: '', width: 15 },
-  // { header: 'Defect Grade', key: '', width: 15 },
-  // { header: 'Position on Site', key: '', width: 15 },
-  // { header: 'Defect description', key: '', width: 15 },
-  // { header: 'Yes/No - Record Unused Equipment in the Compound', key: '', width: 15 },
-  // { header: 'Location on Site', key: '', width: 15 },
-  // { header: 'Equipment description', key: '', width: 15 },
 
 ];
 
