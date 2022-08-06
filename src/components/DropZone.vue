@@ -253,9 +253,6 @@ export default {
             worksheet.getCell('H1').fill = emeraldBackground
             worksheet.getCell('H1').font = headingFont
 
-            worksheet.getCell('I1').fill = emeraldBackground
-            worksheet.getCell('I1').font = headingFont
-
             let esgDetails = this.$store.getters.getEsgDetails
 
             esgDetails.forEach(siteEsg => {
