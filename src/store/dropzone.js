@@ -424,6 +424,20 @@ const actions = {
       delete basepads['basepads_height_abobe_ground_mm']
     }
 
+    let esg = {
+      esg_cultural: other['any_protected_or_endangered_flora_or_fauna_identified_around_the_site'],
+      esg_indigenous: other['are_there_any_indigenous_people_or_informal_settlers_residing_deriving_benefit_from_the_site_surrounding_area'],
+      esg_endangered: other['are_there_any_wetlands_within_100m_of_the_site'],
+      esg_proximity: other['is_the_site_in_an_area_of_cultural_historical_or_archaeological_significance'],
+      esg_wetlands: other['is_the_site_in_close_proximity_to_ecologically_sensitive_areas'],
+    }
+
+    delete other['any_protected_or_endangered_flora_or_fauna_identified_around_the_site']
+    delete other['are_there_any_indigenous_people_or_informal_settlers_residing_deriving_benefit_from_the_site_surrounding_area']
+    delete other['are_there_any_wetlands_within_100m_of_the_site']
+    delete other['is_the_site_in_an_area_of_cultural_historical_or_archaeological_significance']
+    delete other['is_the_site_in_close_proximity_to_ecologically_sensitive_areas']
+
     let response = {
       formVersion,
       appVersion,
@@ -442,6 +456,7 @@ const actions = {
       defects,
       acu,
       other,
+      esg,
       tables: checkboxTables,
     }
 

@@ -94,7 +94,6 @@ const getters = {
             if (table) {
             table = _reduceTableDetails(table, false)
 
-
             table.forEach(tableEl => {
 
               let defectType = element.description.replace("Record ", "").replace('?', '')
@@ -114,7 +113,7 @@ const getters = {
                   break;
                 }
                 case 'Room/Shelter and Rectifier/Battery/ACU defects': {
-                  console.log(tableEl)
+                  // console.log(tableEl)
                   arrays.push({
                     id: site,
                     defect_type: defectType,

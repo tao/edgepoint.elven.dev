@@ -12,6 +12,7 @@ import sites from './sites'
 import files from './files'
 import tables from './tables'
 import warnings from './warnings'
+import esg from './esg'
 
 const debug = process.env.NODE_ENV !== 'production'
 
@@ -28,6 +29,7 @@ export default createStore({
     sites,
     files,
     acu,
+    esg,
     tables,
     warnings,
   },

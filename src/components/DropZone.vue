@@ -17,6 +17,7 @@
         <button v-if="!downloadDisabled" class="py-2 px-4 mr-2 bg-green-300 hover:bg-green-400 rounded-md cursor-pointer" @click="download">Download Excel</button>
         <button v-if="!downloadDisabled" class="py-2 px-4 mr-2 bg-green-300 hover:bg-green-400 rounded-md cursor-pointer" @click="downloadDefects">Download Defects Excel</button>
         <button v-if="!downloadDisabled" class="py-2 px-4 mr-2 bg-green-300 hover:bg-green-400 rounded-md cursor-pointer" @click="downloadStructures">Download Structures Excel</button>
+        <button v-if="!downloadDisabled" class="py-2 px-4 mr-2 bg-green-300 hover:bg-green-400 rounded-md cursor-pointer" @click="downloadEco">Download ESG</button>
 
     </div>
 
@@ -43,7 +44,7 @@
 <script>
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
-import { COLUMN_NAMES, DEFECT_ASSESSMENT_COLUMNS, DEFECT_COLUMNS, STRUCTURE_COLUMNS } from '../constants/columns'
+import { COLUMN_NAMES, DEFECT_ASSESSMENT_COLUMNS, DEFECT_COLUMNS, STRUCTURE_COLUMNS, ECO_COLUMNS } from '../constants/columns'
 
 export default {
     data() {
@@ -207,6 +208,72 @@ export default {
             workbook.xlsx.writeBuffer().then((data) => {
                 const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' });
                 saveAs(blob, `${myDate}__Survey Comparisons.xlsx`);
+            });
+        },
+        downloadEco: async function() {
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('ESG');
+
+            worksheet.columns = ECO_COLUMNS
+
+            // add styles
+            worksheet.getRow(1).alignment = { wrapText: true }
+
+            let emeraldBackground = {
+                type: 'pattern',
+                pattern:'solid',
+                fgColor:{argb:'96c8a2'},
+            }
+
+            let headingFont = {
+                size: 12,
+            }
+
+            worksheet.getCell('A1').fill = emeraldBackground
+            worksheet.getCell('A1').font = headingFont
+
+            worksheet.getCell('B1').fill = emeraldBackground
+            worksheet.getCell('B1').font = headingFont
+
+            worksheet.getCell('C1').fill = emeraldBackground
+            worksheet.getCell('C1').font = headingFont
+
+            worksheet.getCell('D1').fill = emeraldBackground
+            worksheet.getCell('D1').font = headingFont
+
+            worksheet.getCell('E1').fill = emeraldBackground
+            worksheet.getCell('E1').font = headingFont
+
+            worksheet.getCell('F1').fill = emeraldBackground
+            worksheet.getCell('F1').font = headingFont
+
+            worksheet.getCell('G1').fill = emeraldBackground
+            worksheet.getCell('G1').font = headingFont
+
+            worksheet.getCell('H1').fill = emeraldBackground
+            worksheet.getCell('H1').font = headingFont
+
+            worksheet.getCell('I1').fill = emeraldBackground
+            worksheet.getCell('I1').font = headingFont
+
+            let esgDetails = this.$store.getters.getEsgDetails
+
+            esgDetails.forEach(siteEsg => {
+                let orangeDetails = this.$store.getters.getOrangeDetails(siteEsg.id)
+
+                worksheet.addRow({
+                    ...orangeDetails,
+                    ...siteEsg,
+                });
+            })
+
+            // file writing
+            let myDate = new Date()
+            myDate = myDate.toISOString().split('T')[0]
+
+            workbook.xlsx.writeBuffer().then((data) => {
+                const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' });
+                saveAs(blob, `${myDate}__ESG.xlsx`);
             });
         },
         downloadDefects: async function() {

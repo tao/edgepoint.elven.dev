@@ -18,6 +18,20 @@ export const DEFECT_COLUMNS = [
   { header: 'Description / Comments', key: 'description', width: 50 },
 ]
 
+export const ECO_COLUMNS = [
+  { header: 'Site ID', key: 'id', width: 10 },
+  { header: 'Site Name', key: 'site_name', width: 30 },
+  // orange
+  { header: 'Region', key: 'region', width: 50 },
+  { header: 'Quality Review Status', key: 'quality_review_status', width: 30 },
+  // esg
+  { header: 'Is the site in an area of cultural, historical, or archaelogical significance', key: 'esg_cultural', width: 30 },
+  { header: 'Are there any indigenous people or informal settlers residing / deriving benefit from the site surrounding area?', key: 'esg_indigenous', width: 30 },
+  { header: 'Any protected or endangered flora or fauna identified around the site?', key: 'esg_endangered', width: 30 },
+  { header: 'Is the site close proximity to ecologically sensitive areas?', key: 'esg_proximity', width: 30 },
+  { header: 'Are there any wetlands withing 100m of the site?', key: 'esg_wetlands', width: 30 },
+]
+
 export const DEFECT_ASSESSMENT_COLUMNS = [
   { header: 'Site ID', key: 'id', width: 10 },
   { header: 'Type', key: 'type', width: 30 },
