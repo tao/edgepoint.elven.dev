@@ -22,7 +22,6 @@ export const ECO_COLUMNS = [
   { header: 'Site ID', key: 'id', width: 10 },
   { header: 'Site Name', key: 'site_name', width: 30 },
   // orange
-  { header: 'Region', key: 'region', width: 50 },
   { header: 'Quality Review Status', key: 'quality_review_status', width: 30 },
   // esg
   { header: 'Is the site in an area of cultural, historical, or archaelogical significance', key: 'esg_cultural', width: 30 },
