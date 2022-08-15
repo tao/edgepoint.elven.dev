@@ -200,8 +200,8 @@ const actions = {
     let appVersion = payload.appVersion
     let formId = payload._id
 
-    console.log(siteId)
-    console.log(data)
+    // console.log(siteId)
+    // console.log(data)
 
     // extract Building Details
     let buildingDetails = data.filter(
@@ -316,8 +316,6 @@ const actions = {
         transformer_3_size: (other['grid_connection_details'][0]['transformer_3_size'] || other['grid_connection_details'][0]['ttransformer_3_size']) ?? undefined, // spelling mistake
       }
     }
-
-    console.log(_surveyDetails['date'])
 
     // review details
     let _processedReviewDetails = {
@@ -463,7 +461,7 @@ const actions = {
       tables: checkboxTables,
     }
 
-    console.log(response)
+    // console.log(response)
 
     // console.log({
     //   ...other,
