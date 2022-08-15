@@ -194,13 +194,14 @@ const actions = {
   'HANDLE_SITE': (context, payload) => {
     let data = payload.items
 
-    // console.log(data)
-
     // form version
     let siteId = payload.siteId
     let formVersion = payload.formVersion
     let appVersion = payload.appVersion
     let formId = payload._id
+
+    console.log(siteId)
+    console.log(data)
 
     // extract Building Details
     let buildingDetails = data.filter(
@@ -316,11 +317,13 @@ const actions = {
       }
     }
 
+    console.log(_surveyDetails['date'])
+
     // review details
     let _processedReviewDetails = {
       quality_engineer: (typeof other['quality_engineer'] == 'string' ? other['quality_engineer'] : undefined),
       quality_review_status: (typeof other['quality_review_status'] == 'string' ? other['quality_review_status'] : undefined),
-      survey_date: _surveyDetails['date'].split('T')[0],
+      survey_date: (_surveyDetails['date'] ? _surveyDetails['date'].split('T')[0] : undefined),
       signatures,
       form_signature: other['signature'],
     }
@@ -460,7 +463,7 @@ const actions = {
       tables: checkboxTables,
     }
 
-    // console.log(response)
+    console.log(response)
 
     // console.log({
     //   ...other,
