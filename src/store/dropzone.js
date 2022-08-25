@@ -426,11 +426,11 @@ const actions = {
     }
 
     let esg = {
-      esg_cultural: other['any_protected_or_endangered_flora_or_fauna_identified_around_the_site'],
+      esg_endangered: other['any_protected_or_endangered_flora_or_fauna_identified_around_the_site'],
       esg_indigenous: other['are_there_any_indigenous_people_or_informal_settlers_residing_deriving_benefit_from_the_site_surrounding_area'],
-      esg_endangered: other['are_there_any_wetlands_within_100m_of_the_site'],
-      esg_proximity: other['is_the_site_in_an_area_of_cultural_historical_or_archaeological_significance'],
-      esg_wetlands: other['is_the_site_in_close_proximity_to_ecologically_sensitive_areas'],
+      esg_wetlands: other['are_there_any_wetlands_within_100m_of_the_site'],
+      esg_cultural: other['is_the_site_in_an_area_of_cultural_historical_or_archaeological_significance'],
+      esg_proximity: other['is_the_site_in_close_proximity_to_ecologically_sensitive_areas'],
     }
 
     delete other['any_protected_or_endangered_flora_or_fauna_identified_around_the_site']
