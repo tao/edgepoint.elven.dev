@@ -94,30 +94,67 @@ export default {
         },
         upload() {
             let reader = new FileReader();
-            // let formData = new FormData();
 
             reader.addEventListener("load", () => {
-                // this will then display a text file
-                let result = reader.result
-                result = result.replace(/ObjectId\((.*)\)/g, "$1")
-                result = result.replace(/ISODate\((.*)\)/g, "$1")
+                // load the chunks 5MB at a time
+                const CHUNK_SIZE = 5242880;
 
-                result = JSON.parse(result)
+                let buffer = reader.result;
+                let decoder = new TextDecoder();
 
-                let resultArr = []
-
-                // process multiple submissions per JSON file
-                if (Array.isArray(result)) {
-                    resultArr = result
-                } else {
-                    resultArr.push(result)
+                // if the file is smaller than 5MB, parse it all at once
+                if (buffer.byteLength < CHUNK_SIZE) {
+                    let decoded = decoder.decode(buffer);
+                    JSON.parse(decoded).forEach((form) => {
+                        this.$store.dispatch('PROCESS_SITE', form);
+                    });
+                    return;
                 }
 
-                // process array and send to reducer
-                resultArr.forEach(result => {
-                    this.$store.dispatch('PROCESS_SITE', result)
-                })
+                let chunks = Math.floor(buffer.byteLength / CHUNK_SIZE);
+                let currentForms = '';
+                let bracketCount = 0;
+                let decoded = decoder.decode(buffer.slice(0, CHUNK_SIZE));
+                let bracketRe = /\{|\}/g;
+                
+                for (let i = 1; i < chunks; i++) {
+                    let match;
+                    let lastClosingBracketIndex = 0;
+                    while ((match = bracketRe.exec(decoded)) !== null)
+                    {
+                        if (match[0] === '{')
+                            bracketCount++;
+                        else if (match[0] === '}')
+                            bracketCount--;
 
+                        if (bracketCount === 0)
+                            lastClosingBracketIndex = match.index;
+                    }
+
+                    if (lastClosingBracketIndex) {
+                        currentForms += decoded.slice(0, lastClosingBracketIndex + 1) + '\n]\n';
+                        currentForms = currentForms.replace(/ObjectId\((.*)\)/g, "$1");
+                        currentForms = currentForms.replace(/ISODate\((.*)\)/g, "$1");
+                        JSON.parse(currentForms).forEach((form) => {
+                            this.$store.dispatch('PROCESS_SITE', form);
+                        });
+                        // we go 2 instead of 1 to ignore the comma
+                        currentForms = '[\n' + decoded.slice(lastClosingBracketIndex + 2);
+                    } else {
+                        currentForms += decoded;
+                    }
+
+                    decoded = decoder.decode(buffer.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE));
+                }
+
+                // need to handle last chunk differently, because we can't overflow it
+                currentForms += decoded;
+                currentForms += decoder.decode(buffer.slice(chunks * CHUNK_SIZE));
+                currentForms = currentForms.replace(/ObjectId\((.*)\)/g, "$1");
+                currentForms = currentForms.replace(/ISODate\((.*)\)/g, "$1");
+                JSON.parse(currentForms).forEach((form) => {
+                    this.$store.dispatch('PROCESS_SITE', form);
+                });
             }, false);
 
             reader.addEventListener("loadend", () => {
@@ -138,7 +175,7 @@ export default {
             this.$store.commit('FILE_PROCESSING', queuedFile.name)
 
             // Read in the image file as a data URL.
-            reader.readAsText(queuedFile);
+            reader.readAsArrayBuffer(queuedFile);
         },
         download: async function() {
             const workbook = new ExcelJS.Workbook();
